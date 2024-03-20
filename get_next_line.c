@@ -1,107 +1,100 @@
 #include "get_next_line.h"
 
+void	ft_bzero(void *str, size_t n)
+{
+	char	*p;
 
-char    *read_from_file(int fd, char *leftover)
-{       
-        char    *buffer;
-	size_t	bytes_read;
-
-        bytes_read = 1;
-	buffer = calloc(BUFFER_SIZE + 1, sizeof(char));
-        if (buffer == NULL)
-                return (NULL);
-        while (bytes_read != 0 && indexfind(leftover, '\n') == -1)
+	p = (char *)str;
+	while (n > 0)
 	{
-        	bytes_read = read(fd, buffer, BUFFER_SIZE);
-        	if (bytes_read <= 0)
-		{
-			free(buffer);
-			free(leftover);
-			buffer = NULL;
-               		 return (0);
-		}
-		buffer[bytes_read] = '\0';
-		leftover = ft_strjoin(leftover, buffer);
-		if (!leftover)
-			leftover = ft_strdup(buffer);
+		*p = '\0';
+		p++;
+		n--;
 	}
-	free(buffer);
-	buffer = NULL;
-        return(leftover);
 }
 
-
-char	*find_line(char *leftover)
+int	ft_strlen(const char *str)
 {
-	char	*line;
-	int	position;
-	int i;
-
-	i = 0;
-	position = indexfind(leftover, '\n');
-	if (position != -1)
-		line = (char *)malloc(sizeof(char) * (position + 2));
-	else
-		line = (char *)malloc(sizeof(char) * (ft_strlen(leftover) + 1));
-	if (!line)
-		return (0);
-	while (leftover && leftover[i] != '\n')
-		{
-			line[i] = leftover[i];
-			i++;
-		}
-	if (leftover[i] == '\n')
-		{
-			line[i] = leftover[i];
-			i++;
-		}
-	line[i] = '\0';
-	return(line);
-}
-
-char	*findleftover(char *leftover)
-{
-	char	*string;
-	int	position;
 	int	i;
 
-	position = indexfind(leftover, '\n');
 	i = 0;
-	if (position != -1)
-		string = (char *)malloc(sizeof(char) * (ft_strlen(leftover) - position));
-	else 
-		string = (char *)malloc(sizeof(char) * 1);
-	if (!string)
-		return (0);
-	while (position != -1)
-		{
-			string[i] = leftover[position + 1 + i];
-			i++;
-		}
-	string[i] = '\0';
-	free (leftover);
-	return (string);
+	while (str[i] != '\0')
+		i++;
+	return (i);
 }
 
-char    *get_next_line(int fd)
+void	*ft_calloc(size_t num_elements, size_t element_size)
 {
-        static char    *leftover;
-        char    *line;
+	size_t			total_size;
+	unsigned char	*ptr;
 
-        if (BUFFER_SIZE <= 0 || fd < 0)
-                return (0);
-
-        leftover = read_from_file(fd, leftover);
-        if (!leftover)
-                return(0);
-        line = find_line(leftover);
-        if (!leftover || ft_strlen(line) == 0)
-        {
-                free(leftover);
-                free(line);
-                leftover = NULL;
-                return(NULL);
-        }
-        leftover = findleftover(leftover);
-        return (line);
+	if (num_elements > 0 && SIZE_MAX / num_elements < element_size)
+	{
+		return (NULL);
+	}
+	total_size = num_elements * element_size;
+	ptr = malloc(total_size);
+	if (!ptr)
+		return (NULL);
+	ft_bzero(ptr, total_size);
+	return (ptr);
 }
+
+char	*ft_strjoin(const char *s1, const char *s2)
+{
+	char	*joined;
+	size_t	len1;
+	size_t	len2;
+	size_t	i;
+	size_t	j;
+
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen(s2);
+	i = 0;
+	j = 0;
+	joined = malloc(sizeof(char) * (len1 + len2 + 1));
+	if (!joined || !s1 ||!s2)
+		return (NULL);
+	while (s1[i] != 0)
+	{
+		joined[i] = s1[i];
+		i++;
+	}
+	j = 0;
+	while (s2[j] != 0)
+	{
+		joined[i] = s2[j];
+		i++;
+		j++;
+	}
+	joined[i + j] = 0;
+	return (joined);
+}
+
+char	*ft_strchr(const char *string, int character )
+{
+	char	*str;
+
+	str = (char *)string;
+	while (*str != character && *str != 0)
+		str++;
+	if (*str == character)
+		return (str);
+	else
+		return (NULL);
+}
+// char	*ft_strrchr(const char *str, int character)
+// {
+// 	int		i;
+// 	char	c;
+
+// 	c = (char)character;
+// 	i = ft_strlen(str) - 1;
+// 	while (str[i] != c && (i >= 0))
+// 		i--;
+// 	if (i >= 0)
+// 		return ((char *)&str[i]);
+// 	else
+// 		return (NULL);
+// }
+
