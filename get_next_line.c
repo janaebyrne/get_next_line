@@ -1,100 +1,142 @@
 #include "get_next_line.h"
 
-void	ft_bzero(void *str, size_t n)
+int	isbinary(char *leftover)
 {
-	char	*p;
-
-	p = (char *)str;
-	while (n > 0)
-	{
-		*p = '\0';
-		p++;
-		n--;
-	}
-}
-
-int	ft_strlen(const char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str[i] != '\0')
-		i++;
-	return (i);
-}
-
-void	*ft_calloc(size_t num_elements, size_t element_size)
-{
-	size_t			total_size;
-	unsigned char	*ptr;
-
-	if (num_elements > 0 && SIZE_MAX / num_elements < element_size)
-	{
-		return (NULL);
-	}
-	total_size = num_elements * element_size;
-	ptr = malloc(total_size);
-	if (!ptr)
-		return (NULL);
-	ft_bzero(ptr, total_size);
-	return (ptr);
-}
-
-char	*ft_strjoin(const char *s1, const char *s2)
-{
-	char	*joined;
-	size_t	len1;
-	size_t	len2;
 	size_t	i;
-	size_t	j;
 
-	len1 = ft_strlen(s1);
-	len2 = ft_strlen(s2);
+	if (!leftover)
+		return 0;
 	i = 0;
-	j = 0;
-	joined = malloc(sizeof(char) * (len1 + len2 + 1));
-	if (!joined || !s1 ||!s2)
-		return (NULL);
-	while (s1[i] != 0)
+	while (leftover[i] && leftover[i] != '\n')
 	{
-		joined[i] = s1[i];
+		if (leftover[i] == '\0' || leftover[i] < 32 || leftover[i] > 126)
+		{
+			if (leftover[i] == '\0' && leftover[i + 1] == '\0')
+				break ;
+			else
+				return (1);
+		}
 		i++;
 	}
-	j = 0;
-	while (s2[j] != 0)
-	{
-		joined[i] = s2[j];
-		i++;
-		j++;
-	}
-	joined[i + j] = 0;
-	return (joined);
+	return (0);
 }
 
-char	*ft_strchr(const char *string, int character )
+char	*read_from_file(int fd, char *leftover)
 {
-	char	*str;
+	char	*buffer;
+	int		bytes_read;
 
-	str = (char *)string;
-	while (*str != character && *str != 0)
-		str++;
-	if (*str == character)
-		return (str);
-	else
+	if (!leftover)
+		leftover = (char *)ft_calloc(1, sizeof(char));
+	buffer = (char *)ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+	if (!buffer)
 		return (NULL);
+	bytes_read = 1;
+	while (!ft_strchr(leftover, '\n') && bytes_read != 0)
+	{
+		bytes_read = read(fd, buffer, BUFFER_SIZE);
+		if (bytes_read == -1)
+		{
+			free(leftover);
+			free(buffer);
+			return (NULL);
+		}
+		buffer[bytes_read] = '\0';
+		leftover = ft_strjoin(leftover, buffer);
+		if (ft_strchr(buffer, '\n'))
+			break ;
+	}
+	free(buffer);
+	return (leftover);
 }
-// char	*ft_strrchr(const char *str, int character)
-// {
-// 	int		i;
-// 	char	c;
 
-// 	c = (char)character;
-// 	i = ft_strlen(str) - 1;
-// 	while (str[i] != c && (i >= 0))
-// 		i--;
-// 	if (i >= 0)
-// 		return ((char *)&str[i]);
-// 	else
-// 		return (NULL);
+char	*extract_line(char *leftover)
+{
+	char	*line;
+	int		i;
+
+	i = 0;
+	if (!leftover[i])
+		return (NULL);
+	while (leftover[i] && leftover[i] != '\n')
+		i++;
+	line = (char *)ft_calloc((i + 2), sizeof(char));
+	if (!line)
+		return (NULL);
+	i = 0;
+	while (leftover[i] && leftover[i] != '\n')
+	{
+		line[i] = leftover[i];
+		i++;
+	}
+	if (leftover[i] && leftover[i] == '\n')
+	{
+		line[i++] = '\n';
+	}
+	line[i] = '\0';
+	return (line);
+}
+
+char	*findnewstring(char *leftover)
+{
+	int		i;
+	int		j;
+	char	*newstring;
+
+	i = 0;
+	while (leftover[i] && leftover[i] != '\n')
+		i++;
+	if (!leftover[i])
+	{
+		free(leftover);
+		return (NULL);
+	}
+	newstring = ft_calloc(ft_strlen(leftover) - i + 1, sizeof(char));
+	i++;
+	j = 0;
+	while (leftover[i] != '\0')
+		newstring[j++] = leftover[i++];
+	newstring[j] = '\0';
+	free(leftover);
+	return (newstring);
+}
+
+char	*get_next_line(int fd)
+{
+	char	*line;
+	char	*leftover;
+
+	leftover = NULL;
+	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0)< 0)
+		return (NULL);
+	leftover = read_from_file(fd, leftover);
+	if (!leftover)
+		return (NULL);
+	if (isbinary(leftover))
+		return (NULL);
+	line = extract_line(leftover);
+	leftover = findnewstring(leftover);
+	return (line);
+}
+// int main(void)
+// {
+//     int fd;
+//     char *line;
+
+//     fd = open("test.txt", O_RDONLY);
+//     if (fd < 0) {
+//         perror("Error opening file");
+//         return (1);
+//     }
+//     line = get_next_line(fd);
+// 	printf("line is:%s", line);
+// 	line = get_next_line(fd);
+// 	printf("nextlineis:%s", line);
+// 	line = get_next_line(fd);
+// 	printf("nextlineis%s", line);
+//     free(line);
+//     close(fd);
+//     return (0);
 // }
+
 
