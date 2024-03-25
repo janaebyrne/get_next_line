@@ -1,83 +1,68 @@
+
 #include "get_next_line.h"
 
-void    ft_bzero(void *str, size_t n)
-{
-        char    *p;
-        size_t  i;
-
-        p = (char *)str;
-        i = 0;
-        while (i < n)
-        {
-                p[i] = '\0';
-                p++;
-        }
-}
-
-int     ft_strlen(const char *str)
+int     ft_strlen(const char *s)
 {
         int     i;
 
         i = 0;
-        while (str[i] != '\0')
+        while (s[i])
                 i++;
         return (i);
 }
-
-void    *ft_calloc(size_t num_elements, size_t element_size)
-{
-        size_t                  total_size;
-        unsigned char   *ptr;
-
-        total_size = num_elements * element_size;
-        ptr = malloc(total_size);
-        if (!ptr)
-                return (NULL);
-        ft_bzero(ptr, total_size);
-        return (ptr);
-}
-
-char    *ft_strjoin(const char *s1, const char *s2)
-{
-        char    *joined;
-        size_t  totallength;
-        size_t  i;
-        size_t  j;
-
-        totallength = ft_strlen(s1) + ft_strlen(s2);
-        i = 0;
-        j = 0;
-        joined = malloc(sizeof(char) * (totallength + 1));
-        if (!joined || !s1 ||!s2)
-                return (NULL);
-        while (s1[i] != 0)
-        {
-                joined[i] = s1[i];
-                i++;
-        }
-        j = 0;
-        while (s2[j] != 0)
-        {
-                joined[i] = s2[j];
-                i++;
-                j++;
-        }
-        joined[i + j] = 0;
-        return (joined);
-}
-
-char    *ft_strchr(const char *string, int character )
+char    *ft_strchr(const char *s, int c)
 {
         char    *str;
 
-        str = (char *)string;
-        while (*str != character && *str != 0)
+        str = (char *)s;
+        while (*str != c)
+        {
+                if (*str == '\0')
+                        return (NULL);
                 str++;
-        if (*str == character)
-                return (str);
-        else
-                return (NULL);
+        }
+        return (str);
 }
+
+char    *ft_strjoin(char *s1, char *s2)
+{
+        char    *start;
+        char    *str;
+
+        if (!s1 || !s2)
+                return (NULL);
+        str = (char *)malloc((ft_strlen(s1) + ft_strlen(s2) + 1) * sizeof(char));
+        if (!str)
+                return (NULL);
+        start = str;
+        while (*s1)
+                *str++ = *s1++;
+        while (*s2)
+                *str++ = *s2++;
+        *str = '\0';
+        return (start);
+}
+
+void    ft_bzero(void *s, unsigned int n)
+{
+        unsigned char   *p;
+
+        p = s;
+        while (n--)
+                *p++ = '\0';
+}
+
+void    *ft_calloc(unsigned int count, unsigned int size)
+{
+        void    *pointer;
+
+        pointer = malloc(count * size);
+        if (!pointer)
+                return (NULL);
+        ft_bzero(pointer, size * count);
+        return (pointer);
+}
+
 
 
 
