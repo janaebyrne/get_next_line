@@ -1,28 +1,14 @@
 #include "get_next_line.h"
 
-/*int   isbinary(char *leftover)
+char    *join_and_free(char *leftover, char *buffer)
 {
-        size_t  i;
+        char    *temp;
 
-        if (!leftover)
-                return 0;
-        i = 0;
-        while (leftover[i] && leftover[i] != '\n')
-        {
-                if (leftover[i] == '\0' || leftover[i] < 32 || leftover[i] > 126)
-                {
-                        if (leftover[i] == '\0' && leftover[i + 1] == '\0')
-                                break ;
-                        else
-                                return (1);
-                }
-                i++;
-        }
-        return (0);
-}*/
+        temp = ft_strjoin(leftover, buffer);
+        free(leftover);
+        return (temp);
+}
 
-
-// reads the file and returns the text
 char    *read_from_file(int fd, char *leftover)
 {
         char    *buffer;
@@ -30,96 +16,92 @@ char    *read_from_file(int fd, char *leftover)
 
         if (!leftover)
                 leftover = ft_calloc(1, 1);
-        buffer = (char *)ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+        buffer = malloc((BUFFER_SIZE + 1) * sizeof(char)); //allocates memory for buffer plus null terminator
         if (!buffer)
                 return (NULL);
         bytes_read = 1;
         while (bytes_read > 0)
         {
-                bytes_read = read(fd, buffer, BUFFER_SIZE);
-                if (bytes_read == -1)
+                bytes_read = read(fd, buffer, BUFFER_SIZE); //read file
+                if (bytes_read == -1) //if error
                 {
-                        free(buffer);
+                        free (leftover);
+                        free (buffer);
                         return (NULL);
                 }
-                buffer[bytes_read] = '\0';
-                leftover = ft_strjoin(leftover, buffer);
-                if (ft_strchr(buffer, '\n'))
+                buffer[bytes_read] = 0; //null terminate
+                leftover = join_and_free(leftover, buffer);
+                if (ft_strchr(leftover, '\n'))
                         break ;
         }
-        free(buffer);
+        free (buffer);
         return (leftover);
 }
 
-
-
-// extracts the line to return
 char    *extract_line(char *leftover)
 {
-        char    *line;
         int             i;
+        char    *str;
 
         i = 0;
         if (!leftover[i])
                 return (NULL);
         while (leftover[i] && leftover[i] != '\n')
                 i++;
-        line = ft_calloc((i + 2), sizeof(char));
-        if (!line)
-                return (NULL);
+        str = ft_calloc(i + 2, sizeof(char));
         i = 0;
         while (leftover[i] && leftover[i] != '\n')
         {
-                line[i] = leftover[i];
+                str[i] = leftover[i];
                 i++;
         }
         if (leftover[i] && leftover[i] == '\n')
-        {
-                line[i++] = '\n';
-        }
-        return (line);
+                str[i++] = '\n';
+        return (str);
 }
-//deletes the line found to give the leftover
 
-char    *findnewstring(char *leftover)
+
+char    *clean_file(char *leftover)
 {
         int             i;
         int             j;
-        char    *newstring;
+        char    *str;
 
         i = 0;
+        j = 0;
         while (leftover[i] && leftover[i] != '\n')
                 i++;
         if (!leftover[i])
         {
-                free(leftover);
+                free (leftover);
                 return (NULL);
         }
-        newstring = ft_calloc((ft_strlen(leftover) - i + 1), sizeof(char));
-        i++;
-        j = 0;
-        while (leftover[i])
-                newstring[j++] = leftover[i++];
-        free(leftover);
-        return (newstring);
+        str = ft_calloc((ft_strlen(leftover) - i + 1), sizeof(*leftover));
+        if (!str)
+                return (NULL);
+        while (leftover[++i])
+                str[j++] = leftover[i];
+        str[j] = '\0';
+        free (leftover);
+        return (str);
 }
-
-
 
 char    *get_next_line(int fd)
 {
-        char    *line;
-        char    *leftover;
+        char            *output;
+        static char     *leftover;
 
-        leftover = NULL;
-        if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+        if (fd < 0 || BUFFER_SIZE <= 0)
                 return (NULL);
         leftover = read_from_file(fd, leftover);
         if (!leftover)
                 return (NULL);
-        line = extract_line(leftover);
-        leftover = findnewstring(leftover);
-        return (line);
+        output = extract_line(leftover);
+        leftover = clean_file(leftover);
+        return (output);
+}
+
+
 }
 // int main(void)
 // {
